@@ -1,3 +1,17 @@
+(* RetroNick's version of popular fiveline puzzle/logic game          *)
+(* This Program is free and open source. Do what ever you like with   *)
+(* the code. Tested on freepascal for Dos GO32 target but should work *)
+(* on anything that uses the graph unit.                              *)
+(*                                                                    *)
+(* If you can't sleep at night please visit my github and youtube     *)
+(* channel. A sub and follow would be nice :)                         *)
+(*                                                                    *)
+(* https://github.com/RetroNick2020                                   *)
+(* https://www.youtube.com/channel/UCLak9dN2fgKU9keY2XEBRFQ           *)
+(* https://twitter.com/Nickshardware                                  *)
+(* nickshardware2020@gmail.com                                        *)
+(*                                                                    *)
+
 Program FiveLine;
      uses crt,graph,pathfind,squeue,SysUtils;
 Const
@@ -5,8 +19,8 @@ Const
   ProgramAuthor = 'RetroNick';
   ProgramReleaseDate = 'October 1 - 2021';
 
-  HSize = 9;
-  VSize = 9;
+  HSize = 9;   //if you cange hsize or vsize make sure to change in
+  VSize = 9;   //pathfind unit also
 
   GBItemRadius = 10;
   GBSQWidth  = 30;
@@ -87,7 +101,7 @@ var
 
  score         : ScoreRec;
  help          : helpRec;
-
+ cheatmode     : boolean;
 
 function GetKey : integer;
 var
@@ -355,7 +369,6 @@ var
 i,j : integer;
 begin
  SetFillStyle(SolidFill,Blue);
-// Bar(0,0,9*30,9*30);
  GB_Bar(0,0,HSize*GBSQWidth,Vsize*GBSQHeight);
 
  SetColor(white);
@@ -392,56 +405,6 @@ begin
   DrawGameBoardItems;
 end;
 
-Procedure SetGameBoardPos(xpos,ypos : integer);
-begin
- GBPos.xoff:=xpos;
- GBPos.yoff:=ypos;
-end;
-
-Procedure SetGameHelpPos(xpos,ypos : integer);
-begin
- help.xoff:=xpos;
- help.yoff:=ypos;
-end;
-
-Procedure SetGameScorePos(xpos,ypos : integer);
-begin
- score.xoff:=xpos;
- score.yoff:=ypos;
-end;
-
-procedure DrawTitle;
-begin
- SetTextStyle(DefaultFont,HorizDir,2);
- SetColor(White);
- OutTextXY(10,10,ProgramName+' By '+ProgramAuthor);
- SetTextStyle(DefaultFont,HorizDir,1);
- OutTextXY(10,30,'Released on '+ProgramReleaseDate);
-end;
-
-procedure DrawGameOver;
-begin
- SetTextStyle(DefaultFont,HorizDir,2);
- SetColor(Yellow);
- OutTextXY(GBPos.xoff+65,GBPos.yoff+160,'Game Over');
-end;
-
-procedure DrawHelp;
-var
-  w,h : integer;
-begin
- w:=200;
- h:=150;
-
- SetTextStyle(DefaultFont,HorizDir,1);
- SetColor(White);
- SetFillStyle(SolidFill,Blue);
- Bar(help.xoff,help.yoff,help.xoff+w,help.yoff+h);
- OutTextXY(GBPos.xoff+65,GBPos.yoff+160,'Game Over');
-end;
-
-
-
 //as long it is not empty it should be moveable
 Function canSelectItem(x,y : integer) : Boolean;
 begin
@@ -475,7 +438,7 @@ var
 begin
  c1:=TGB[x1,y1].Item;
  c2:=TGB[x2,y2].Item;
- IsColorSame:=(c1>0) and (c1=c2); //colors start at 1
+ IsColorSame:=(c1>0) and (c1=c2); 
 end;
 
 //looks for continous color in any direction
@@ -523,18 +486,99 @@ begin
  inc(aiCounter);
 end;
 
-Procedure DisplayScore(justscore : boolean);
+Procedure SetGameBoardPos(xpos,ypos : integer);
 begin
+ GBPos.xoff:=xpos;
+ GBPos.yoff:=ypos;
+end;
+
+Procedure SetGameHelpPos(xpos,ypos : integer);
+begin
+ help.xoff:=xpos;
+ help.yoff:=ypos;
+end;
+
+Procedure SetGameScorePos(xpos,ypos : integer);
+begin
+ score.xoff:=xpos;
+ score.yoff:=ypos;
+end;
+
+procedure DrawTitle;
+begin
+ SetTextStyle(DefaultFont,HorizDir,2);
+ SetColor(White);
+ OutTextXY(10,10,ProgramName);
+ OutTextXY(10,30,'By '+ProgramAuthor);
+ 
+ SetTextStyle(DefaultFont,HorizDir,1);
+ OutTextXY(10,50,'Released on '+ProgramReleaseDate);
+end;
+
+procedure DrawGameOver;
+begin
+ SetTextStyle(DefaultFont,HorizDir,2);
+ SetColor(Yellow);
+ OutTextXY(GBPos.xoff+65,GBPos.yoff+160,'Game Over');
+end;
+
+procedure DrawHelp;
+var
+  w,h : integer;
+begin
+ w:=285;
+ h:=250;
+
+ SetTextStyle(DefaultFont,HorizDir,1);
+ SetColor(Yellow);
+ SetFillStyle(SolidFill,Blue);
+ Bar(help.xoff,help.yoff,help.xoff+w,help.yoff+h);
+ OutTextXY(help.xoff+10,help.yoff+10, 'How To Play Fiveline');
+ SetColor(White);
+ OutTextXY(help.xoff+10,help.yoff+30, 'Arrange five or more balls of same');
+ OutTextXY(help.xoff+10,help.yoff+44, 'color in any direction to remove');
+ OutTextXY(help.xoff+10,help.yoff+58, 'from board. Each failed attempt ');
+ OutTextXY(help.xoff+10,help.yoff+72, 'will introduce more balls to the');
+ OutTextXY(help.xoff+10,help.yoff+86, 'board. Use arrow keys and Enter');
+ OutTextXY(help.xoff+10,help.yoff+100,'key to select your ball. Move ');
+ OutTextXY(help.xoff+10,help.yoff+114,'crosshair to an empty location and');
+ OutTextXY(help.xoff+10,help.yoff+128,'press ENTER to move your ball.');
+ OutTextXY(help.xoff+10,help.yoff+142,'Only balls with a valid path can');
+ OutTextXY(help.xoff+10,help.yoff+156,'be moved!');
+
+ SetColor(Yellow);
+ OutTextXY(help.xoff+10,help.yoff+176,'R = Restart Game');
+ OutTextXY(help.xoff+10,help.yoff+196,'X or Q = QUIT');
+ OutTextXY(help.xoff+10,help.yoff+216,'C = Enable/Disable cheat mode');
+ if cheatmode then
+ begin
+   SetColor(Green);
+   OutTextXY(help.xoff+10,help.yoff+230,'Keys 0 1 2 3 4 5 6 are Enabled');
+ end;
+end;
+
+Procedure DisplayScore(justscore : boolean);
+var
+ w,h : integer;
+begin
+ w:=285;
+ h:=70;
+ SetColor(White);
  SetFillStyle(SolidFill,Blue);
  if justscore = false then
  begin
-   Bar(639-100,0,639,40);
-   OutTextXY(639-100,0,'SCORE:');
+   Bar(Score.xoff,score.yoff,Score.xoff+w,score.yoff+h);
+   SetTextStyle(DefaultFont,HorizDir,2);
+   OutTextXY(Score.xoff+10,score.yoff+8,'SCORE:');
  end;
 
- Bar(639-100,20,639,80);
- OutTextXY(639-100,20,IntToStr(score.score));
- OutTextXY(639-100,30,IntToStr(score.pos)+'x'+IntToStr(score.mx));
+ //erase previouse score and line points
+ SetFillStyle(SolidFill,Blue);
+ Bar(Score.xoff,score.yoff+28,Score.xoff+w,score.yoff+h);
+ SetTextStyle(DefaultFont,HorizDir,2);
+ OutTextXY(Score.xoff+10,score.yoff+30,IntToStr(score.score));
+ SetColor(Yellow);
+ OutTextXY(Score.xoff+10,score.yoff+50,IntToStr(score.pos)+'x'+IntToStr(score.mx));
 end;
 
 procedure UpdateScore(pos, count : integer);
@@ -733,22 +777,13 @@ begin
   GetRandomItem:=random(6)+GBItemRed;
 end;
 
-//for debug
+//for debug / cheat mode
 Procedure PlotItem(item : integer);
 begin
   GB[GBCrossHair.x,GBCrossHair.y].Item:=item;
   DrawGameBoardItem(GBCrossHair.x,GBCrossHair.y,item);
   DrawCrossHair;
 end;
-
-//for debug
-Procedure PlotEmptyItem;
-begin
-  GB[GBCrossHair.x,GBCrossHair.y].Item:=GBItemEmpty;
-  DrawGameBoardItem(GBCrossHair.x,GBCrossHair.y,GBItemEmpty);
-  DrawCrossHair;
-end;
-
 
 Procedure LockItem;
 begin
@@ -806,7 +841,6 @@ begin
   isNextToMoveBlock:=((dx=1) and (dy=0)) or ((dx=0) and (dy=1))
 end;
 
-
 Procedure RemoveRows(var apoints : aitempoints; count : integer);
 var
  i : integer;
@@ -819,7 +853,6 @@ begin
  end;
  DrawRowOfColors(apoints,GBItemEmpty);
 end;
-
 
 Procedure SetRowsClearedStatus(status : boolean);
 begin
@@ -864,7 +897,7 @@ begin
   if isPathToItem = false then exit;
 
   item:=GB[sx,sy].item;
-//  item:=GBItemRed;
+
   for i:=1 to SQueueCount(FoundPath) do
   begin
     SQueueGet(FoundPath,i,qr);
@@ -902,6 +935,7 @@ begin
  if canmove = false then exit;
 
  nextMove:=isNextToMoveBlock(GBItemLock.x,GBItemLock.y,GBCrossHair.x,GBCrossHair.y);
+
  if nextmove = false then
  begin
     pathmove:=isPathToItem(GBItemLock.x,GBItemLock.y,GBCrossHair.x,GBCrossHair.y);
@@ -936,11 +970,22 @@ begin
  begin
    GetRandomSpot(x,y);
    item:=GetRandomItem;
-
    GB[x,y].Item:=Item;
    DrawGameBoardItem(x,y,item);
    Delay(1200);
  end;
+end;
+
+
+Procedure CheatAction(k : integer);
+begin
+  if k=ord('1') then PlotItem(GBItemRed);
+  if k=ord('2') then PlotItem(GBItemGreen);
+  if k=ord('3') then PlotItem(GBItemBrown);
+  if k=ord('4') then PlotItem(GBItemCyan);
+  if k=ord('5') then PlotItem(GBItemLightBlue);
+  if k=ord('6') then PlotItem(GBItemLightGray);
+  if k=ord('0') then PlotItem(GBItemEmpty);
 end;
 
 Procedure LockOrMove;
@@ -970,61 +1015,77 @@ begin
    LockItem;
  end;
 end;
+
 procedure InitScore;
 begin
- score.Score:=0;
+  score.Score:=0;
+  score.mx:=0;
+  score.pos:=0;
+end;
+
+Procedure StartGame;
+begin
+  cheatmode:=false;
+  InitScore;
+  SetGameBoardPos(30,70);
+  SetGameHelpPos(330,90);
+  SetGameScorePos(330,10);
+  DrawTitle;
+  DisplayScore(false);
+  InitAIQueue;
+  InitGameBoard;
+  InitItemLock;
+  InitCrossHair;
+  DrawGameBoard;
+  DrawHelp;
+  ComputerMove;
+  DrawCrossHair;
 end;
 
 var
-gd,gm : smallint;
-      k : integer;
+  gd,gm    : smallint;
+         k : integer;
+  gameover : boolean;
 begin
-
  gd:=ega;
  gm:=egahi;
  initgraph(gd,gm,'');
+
  Randomize;
- InitScore;
- DrawTitle;
- DisplayScore(false);
- InitAIQueue;
- InitGameBoard;
- InitItemLock;
- InitCrossHair;
- SetGameBoardPos(50,50);
- DrawGameBoard;
- DrawGameOver;
- DrawHelp;
- ComputerMove;
- DrawCrossHair;
+ gameover:=false;
+ StartGame;
  Repeat
   k:=GetKey;
-  if k=75 then MoveCrossHairLeft;
-  if k=77 then MoveCrossHairRight;
-  if k=72 then MoveCrossHairUp;
-  if k=80 then MoveCrossHairDown;
-  if k=ord('1') then PlotItem(GBItemRed);
-  if k=ord('2') then PlotItem(GBItemGreen);
-  if k=ord('3') then PlotItem(GBItemBrown);
-  if k=ord('4') then PlotItem(GBItemCyan);
-  if k=ord('5') then PlotItem(GBItemLightBlue);
-  if k=ord('6') then PlotItem(GBItemLightGray);
-
-
-  if k=ord('0') then PlotEmptyItem;
-
-  if k=ord('c') then CheckForRows;
-  if k=ord('r') then DrawGameBoard;
-  if (k=ord('l')) or (k=13) then LockOrMove;
-  if k=ord('m') then MovedItem;
+  if gameover = false then
+  begin
+    if k=75 then MoveCrossHairLeft;
+    if k=77 then MoveCrossHairRight;
+    if k=72 then MoveCrossHairUp;
+    if k=80 then MoveCrossHairDown;
+  end;
+//  if k=ord('[') then CheckForRows;
+//  if k=ord('g')  then DrawGameBoard;
 //  if k=ord('p') then DrawPath;
 
-  //writeln(k);
- Until (k=ord('q')) or isGameOver;
+  if (k=ord('r')) or (k=ord('R')) then 
+  begin
+     gameover:=false;
+     StartGame;
+  end;
+  if (k=ord('l')) or (k=ord('L')) or (k=13) then LockOrMove;
 
-// readln;
+  //check if board is filled up/gave over
+  gameover:=isGameOver;
+  if gameover then DrawGameOver;
+  //if (k=ord('m')) then MovedItem;
+
+  if CheatMode then CheatAction(k);
+  if (k=ord('c')) or (k=ord('C')) then
+  begin
+     Cheatmode:=NOT cheatmode;
+     DrawHelp;
+  end;
+ Until (k=ord('q')) or (k=ord('Q')) or (k=ord('x')) or (k=ord('X'));
  closegraph;
-
-
 end.
 

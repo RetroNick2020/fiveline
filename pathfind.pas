@@ -1,12 +1,26 @@
+(* RetroNick's version of popular fiveline puzzle/logic game          *)
+(* This Program is free and open source. Do what ever you like with   *)
+(* the code. Tested on freepascal for Dos GO32 target but should work *)
+(* on anything that uses the graph unit.                              *)
+(*                                                                    *)
+(* If you can't sleep at night please visit my github and youtube     *)
+(* channel. A sub and follow would be nice :)                         *)
+(*                                                                    *)
+(* https://github.com/RetroNick2020                                   *)
+(* https://www.youtube.com/channel/UCLak9dN2fgKU9keY2XEBRFQ           *)
+(* https://twitter.com/Nickshardware                                  *)
+(* nickshardware2020@gmail.com                                        *)
+(*                                                                    *)
+
 Unit PathFind;
 
 Interface
  Uses squeue;
 
-
 const
  VSIZE = 9;
  HSIZE = 9;
+
 type
   PGA = Array[0..HSIZE-1,0..VSIZE-1] of Integer;
 
@@ -41,10 +55,6 @@ Const
  G_Wall    = 11;
 
 Implementation
-
-
-
-
 
 procedure ClearGrid(var TGrid : PGA);
 var
