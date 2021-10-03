@@ -161,7 +161,7 @@ end;
 Function FindPointPath(var TGrid : PGA;StartX,StartY,StartDir : integer; Var PathQueue : SimpleQueueRec) : integer;
 var
  CP,NP : LocationRec;
- tx,ty : integer;
+
 begin
  FindPointPath:=0;
  if isGoodStart(TGrid,StartX,StartY,StartDir)=FALSE then exit;
@@ -213,7 +213,6 @@ Function FindTargetPath(var PGrid : PGA;
 
 var
  Queue  : SimpleQueueRec;
- i     : integer;
  qr    : LocationRec;
  found : integer;
 begin
@@ -229,7 +228,7 @@ begin
    PlaceDirectionArrows(Queue,PGrid,QR.x,QR.y);
  end;
 
- //check in all directions
+ (*check in all directions*)
  InitSQueue(FoundPath);
  found:=FindPointPath(PGrid,sx,sy,G_DOWN,FoundPath);
  if found = 0 then
@@ -237,6 +236,7 @@ begin
     InitSQueue(FoundPath);
     found:=FindPointPath(PGrid,sx,sy,G_LEFT,FoundPath);
  end;
+
  if found = 0 then
  begin
     InitSQueue(FoundPath);

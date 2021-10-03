@@ -12,20 +12,28 @@
 (* nickshardware2020@gmail.com                                        *)
 (*                                                                    *)
 
+(* remove or comment next line to compile for Turbo Pascal            *)
+{$DEFINE FPC}
+
 Program FiveLine;
-     uses crt,graph,pathfind,squeue,SysUtils;
+     uses crt,graph,pathfind,squeue;
+
 Const
-  ProgramName ='Fiveline v1.0';
+  ProgramName ='Fiveline v1.1';
   ProgramAuthor = 'RetroNick';
   ProgramReleaseDate = 'October 1 - 2021';
 
-  HSize = 9;   //if you cange hsize or vsize make sure to change in
-  VSize = 9;   //pathfind unit also
+  HSize = 9;   (*if you cange hsize or vsize make sure to change in*)
+  VSize = 9;   (*pathfind unit also*)
 
   GBItemRadius = 10;
   GBSQWidth  = 30;
   GBSQHeight = 30;
   GBSQThick  = 3;
+
+  DBDelay = 300;
+  AmoveDelay = 200;
+  NewBallDelay = 600;
 
   GBItemEmpty  = 0;
   GBItemCrossHair = 1;
@@ -50,13 +58,13 @@ GameBoardRec = record
 
 GameBoard = array[0..HSize-1,0..VSize-1] of GameBoardRec;
 
-//used for storing path when performing a MoveTo command
-//move piece another valid position
+(*used for storing path when performing a MoveTo command*)
+(*move piece another valid position*)
 pathpoints = record
               x,y : integer;
              end;
 
-//used for storing all the item/color lines that are 5 items (or more) wide
+(*used for storing all the item/color lines that are 5 items (or more) wide*)
 itempoints = record
               x,y,stepx,stepy,item,count : integer;
              end;
@@ -73,7 +81,14 @@ itempoints = record
                end;
 
 
- apathpoints = array of pathpoints;
+
+
+{$IFDEF FPC}
+   apathpoints = array of pathpoints;
+{$ELSE}
+   apathpoints = array[0..1000] of pathpoints;
+{$ENDIF}
+
  aitempoints = array[0..1000] of itempoints;
 
  scoreRec = Record
@@ -102,6 +117,14 @@ var
  score         : ScoreRec;
  help          : helpRec;
  cheatmode     : boolean;
+
+function IntToStr(num : longint) : string;
+var
+ TStr :string;
+begin
+ Str(num,TStr);
+ IntToStr:=TStr;
+end;
 
 function GetKey : integer;
 var
@@ -194,11 +217,11 @@ begin
   wtoff:=(GBSQHeight-wthick) div 2;
   htoff:=(GBSQWidth-hthick) div 2;
 
-// -
+(* - *)
   GB_Bar(x*GBSQWidth+xoff,y*GBSQHeight+wtoff,
       x*GBSQWidth+xoff+w, y*GBSQHeight+wtoff+wthick);
 
-// |
+(* | *)
   GB_Bar(x*GBSQWidth+htoff,y*GBSQHeight+yoff,
       x*GBSQWidth+htoff+hthick,y*GBSQHeight+yoff+h);
 end;
@@ -242,7 +265,7 @@ begin
   else if item=GBItemBrick then
   begin
     SetFillStyle(xHatchFill,Yellow);
-    GB_Bar(x*30+1,y*30+1,x*30+30-1,y*30+30-1);
+    DrawFilledRect(x,y);
   end
   else if item=GBItemCrossHair then
   begin
@@ -308,11 +331,11 @@ procedure MoveCrossHairLeft;
 begin
   if GBCrossHair.x > 0 then
   begin
-     //erase cross hair by redrawing item at location x,y
+     (* erase cross hair by redrawing item at location x,y*)
      DrawGameBoardItem(GBCrossHair.x,
                        GBCrossHair.y,
                        GB[GBCrossHair.x,GBCrossHair.y].Item);
-     //update current x
+     (* update current *)
      dec(GBCrossHair.x);
      DrawCrossHair;
   end;
@@ -322,13 +345,13 @@ procedure MoveCrossHairRight;
 begin
   if GBCrossHair.x < (HSIZE-1) then
   begin
-     //erase cross hair by redrawing item at location x,y
+     (*erase cross hair by redrawing item at location x,y*)
      DrawGameBoardItem(GBCrossHair.x,
                        GBCrossHair.y,
                        GB[GBCrossHair.x,GBCrossHair.y].Item);
-     //update current x
+     (*update current x*)
      inc(GBCrossHair.x);
-     //draw cross hair at updated x,y
+     (*draw cross hair at updated x,y*)
      DrawCrossHair;
   end;
 end;
@@ -337,13 +360,13 @@ procedure MoveCrossHairDown;
 begin
   if GBCrossHair.y < (VSIZE-1) then
   begin
-     //erase cross hair by redrawing item at location x,y
+     (*erase cross hair by redrawing item at location x,y*)
      DrawGameBoardItem(GBCrossHair.x,
                        GBCrossHair.y,
                        GB[GBCrossHair.x,GBCrossHair.y].Item);
-     //update current y
+     (*update current y*)
      inc(GBCrossHair.y);
-     //draw cross hair at updated x,y
+     (*draw cross hair at updated x,y*)
      DrawCrossHair;
   end;
 end;
@@ -352,14 +375,14 @@ procedure MoveCrossHairUp;
 begin
   if GBCrossHair.y > 0 then
   begin
-     //erase cross hair by redrawing item at location x,y
+     (*erase cross hair by redrawing item at location x,y*)
      DrawGameBoardItem(GBCrossHair.x,
                        GBCrossHair.y,
                        GB[GBCrossHair.x,GBCrossHair.y].Item);
 
-     //update current y
+     (*update current y*)
      dec(GBCrossHair.y);
-     //draw cross hair at updated x,y
+     (*draw cross hair at updated x,y*)
      DrawCrossHair;
   end;
 end;
@@ -405,13 +428,13 @@ begin
   DrawGameBoardItems;
 end;
 
-//as long it is not empty it should be moveable
+(*as long it is not empty it should be moveable*)
 Function canSelectItem(x,y : integer) : Boolean;
 begin
   canSelectItem:=(GB[x,y].Item <> GBItemEmpty);
 end;
 
-//from selected position
+(*from selected position*)
 function canMoveTo(x,y : integer) : Boolean;
 begin
   canMoveTo:=(GB[x,y].Item = GBItemEmpty);
@@ -438,11 +461,11 @@ var
 begin
  c1:=TGB[x1,y1].Item;
  c2:=TGB[x2,y2].Item;
- IsColorSame:=(c1>0) and (c1=c2); 
+ IsColorSame:=(c1>0) and (c1=c2);
 end;
 
-//looks for continous color in any direction
-//stepx and stepy can be 0 or 1 or -1
+(*looks for continous color in any direction*)
+(*stepx and stepy can be 0 or 1 or -1*)
 
 function FindColorCount(Var TGB : GameBoard;startx,starty,stepx,stepy,count : integer) : integer;
 var
@@ -474,8 +497,7 @@ end;
 
 procedure AddRowsToQueue(x,y,stepx,stepy,count : integer;
                                    var apoints : aitempoints);
-var
- item : integer;
+
 begin
  apoints[aiCounter].item:=GB[x,y].Item;
  apoints[aiCounter].x:=x;
@@ -510,7 +532,7 @@ begin
  SetColor(White);
  OutTextXY(10,10,ProgramName);
  OutTextXY(10,30,'By '+ProgramAuthor);
- 
+
  SetTextStyle(DefaultFont,HorizDir,1);
  OutTextXY(10,50,'Released on '+ProgramReleaseDate);
 end;
@@ -572,7 +594,7 @@ begin
    OutTextXY(Score.xoff+10,score.yoff+8,'SCORE:');
  end;
 
- //erase previouse score and line points
+ (*erase previouse score and line points*)
  SetFillStyle(SolidFill,Blue);
  Bar(Score.xoff,score.yoff+28,Score.xoff+w,score.yoff+h);
  SetTextStyle(DefaultFont,HorizDir,2);
@@ -584,7 +606,7 @@ end;
 procedure UpdateScore(pos, count : integer);
 begin
  score.pos:=pos;
- score.mx:=abs(4-count)*10; //5 line rows = 10 points per ball, 6 line = 20, 7 line =30
+ score.mx:=abs(4-count)*10; (*5 line rows = 10 points per ball, 6 line = 20, 7 line =30*)
  Inc(score.Score,score.mx);
  DisplayScore(true);
 end;
@@ -599,9 +621,9 @@ begin
    inc(x,stepx);
    inc(y,stepy);
 
-   //update score as we are removing the row
+   (*update score as we are removing the row*)
    if item = GBItemEmpty then UpdateScore(i,count);
-   Delay(500);
+   Delay(DBDelay);
  end;
 end;
 
@@ -638,75 +660,75 @@ var
  rowcount : integer;
 begin
  rowcount:=0;
- //Make Copy GM
+ (*Make Copy GM*)
  TGB:=GB;
 
- //horizonatal check
- for j:=0 to VSize-1 do   //VSIZE-1    0 to 8
+ (*horizonatal check*)
+ for j:=0 to VSize-1 do   (*//VSIZE-1    0 to 8*)
  begin
-   for i:=0 to HSize-5 do //HSIZE-5    0 to 4
+   for i:=0 to HSize-5 do (*HSIZE-5    0 to 4*)
    begin
      count:=FindColorCount(TGB,i,j,1,0,9);
      if count > 4 then
      begin
         inc(rowcount);
         AddRowsToQueue(i,j,1,0,count,apoints);
-        //Remove Line from from TGB - solves 6 to 9 in a row duplicate problem
+        (*Remove Line from from TGB - solves 6 to 9 in a row duplicate problem*)
         DeleteRowFromBoard(TGB,i,j,1,0,count);
      end;
    end;
  end;
 
- //Make Copy GM Again - not a mistake
+ (*Make Copy GM Again - not a mistake*)
  TGB:=GB;
-  //vertical check
- for i:=0 to HSize-1 do   //HSIZE-1    0 to 8
+  (*vertical check*)
+ for i:=0 to HSize-1 do   (*HSIZE-1    0 to 8*)
  begin
-   for j:=0 to VSize-5 do //VSIZE-5    0 to 4
+   for j:=0 to VSize-5 do (*VSIZE-5    0 to 4*)
    begin
      count:=FindColorCount(TGB,i,j,0,1,9);
      if count > 4 then
      begin
        inc(rowcount);
        AddRowsToQueue(i,j,0,1,count,apoints);
-       //Remove Line from from TGB - solves 6 to 9 in a row duplicate problem
+       (*Remove Line from from TGB - solves 6 to 9 in a row duplicate problem*)
        DeleteRowFromBoard(TGB,i,j,0,1,count);
      end;
    end;
  end;
 
- //Make Copy GM 3rd time
+ (*Make Copy GM 3rd time*)
  TGB:=GB;
 
- //horizonatal down/right
- for j:=0 to VSize-5 do     //VSIZE-5   0 to 4
+ (*horizonatal down/right*)
+ for j:=0 to VSize-5 do     (*VSIZE-5   0 to 4*)
  begin
-   for i:=0 to HSize-5 do   //HSIZE-5   0 to 4
+   for i:=0 to HSize-5 do   (*HSIZE-5   0 to 4*)
    begin
      count:=FindColorCount(TGB,i,j,1,1,9);
      if count > 4 then
      begin
         inc(rowcount);
         AddRowsToQueue(i,j,1,1,count,apoints);
-        //Remove Line from from TGB - solves 6 to 9 in a row duplicate problem
+        (*Remove Line from from TGB - solves 6 to 9 in a row duplicate problem*)
         DeleteRowFromBoard(TGB,i,j,1,1,count);
      end;
    end;
  end;
 
-  //Make Copy GM 4th time
+  (*Make Copy GM 4th time*)
  TGB:=GB;
-  //horizonatal down/left
- for j:=0 to VSize-5 do      //VSIZE-5  0 to 4
+  (*horizonatal down/left*)
+ for j:=0 to VSize-5 do      (*VSIZE-5  0 to 4*)
  begin
-   for i:=4 to HSize-1 do    //HSIZE-1  4 to 8
+   for i:=4 to HSize-1 do    (*HSIZE-1  4 to 8*)
    begin
      count:=FindColorCount(TGB,i,j,-1,1,9);
      if count > 4 then
      begin
         inc(rowcount);
         AddRowsToQueue(i,j,-1,1,count,apoints);
-        //Remove Line from from TGB - solves 6 to 9 in a row duplicate problem
+        (*Remove Line from from TGB - solves 6 to 9 in a row duplicate problem*)
         DeleteRowFromBoard(TGB,i,j,-1,1,count);
      end;
    end;
@@ -777,7 +799,7 @@ begin
   GetRandomItem:=random(6)+GBItemRed;
 end;
 
-//for debug / cheat mode
+(*for debug / cheat mode*)
 Procedure PlotItem(item : integer);
 begin
   GB[GBCrossHair.x,GBCrossHair.y].Item:=item;
@@ -792,7 +814,7 @@ begin
    if GBItemLock.isLocked then
    begin
      GBItemLock.isLocked:=false;
-     DrawLocked;  //erase current lock
+     DrawLocked;  (*erase current lock*)
    end;
    GBItemLock.x:=GBCrossHair.x;
    GBItemLock.y:=GBCrossHair.y;
@@ -801,8 +823,8 @@ begin
  end;
 end;
 
-// Copy GameBoard data to PGrid in a format that our path finding algorithm
-// can make use of it. each color ball is considered a wall/obstacle.
+(* Copy GameBoard data to PGrid in a format that our path finding algorithm*)
+(* can make use of it. each color ball is considered a wall/obstacle.*)
 
 Procedure CopyGbToPga(Var PGrid : PGA);
 var
@@ -827,7 +849,7 @@ begin
   isPathToItem:=FindTargetPath(PGrid,sx,sy,tx,ty,FoundPath);
 end;
 
-//check if the destination location is one block to the right,left,up,down
+(*check if the destination location is one block to the right,left,up,down*)
 function isNextToMoveBlock(sx,sy,tx,ty : integer) : boolean;
 var
  vpos : boolean;
@@ -902,14 +924,14 @@ begin
   begin
     SQueueGet(FoundPath,i,qr);
     DrawGameBoardItem(qr.x,qr.y,GBItemBrick);
-    Delay(500);
+    Delay(AmoveDelay);
   end;
   DrawGameBoardItem(sx,sy,GBItemEmpty);
   for i:=1 to SQueueCount(FoundPath) do
   begin
     SQueueGet(FoundPath,i,qr);
     DrawGameBoardItem(qr.x,qr.y,Item);
-    Delay(500);
+    Delay(AmoveDelay);
     DrawGameBoardItem(qr.x,qr.y,GBItemBrick);
   end;
   DrawGameBoardItem(tx,ty,item);
@@ -918,7 +940,7 @@ begin
   begin
     SQueueGet(FoundPath,i,qr);
     DrawGameBoardItem(qr.x,qr.y,GBItemEmpty);
-    Delay(500);
+    Delay(AMoveDelay);
   end;
 
 end;
@@ -943,7 +965,7 @@ begin
  end;
 
  GBItemLock.isLocked:=false;
- DrawLocked;  //erase current lock
+ DrawLocked;  (*erase current lock*)
 
  if pathmove then AniMoveBoardItem(GBItemLock.x,GBItemLock.y,
                                    GBCrossHair.x,GBCrossHair.y);
@@ -972,7 +994,7 @@ begin
    item:=GetRandomItem;
    GB[x,y].Item:=Item;
    DrawGameBoardItem(x,y,item);
-   Delay(1200);
+   Delay(NewBallDelay);
  end;
 end;
 
@@ -1000,11 +1022,11 @@ begin
    begin
      if MovedItem then
      begin
-       // we only drop new balls when a line has NOT been cleared after a move
+       (* we only drop new balls when a line has NOT been cleared after a move*)
        if GetRowsClearedStatus=false then
        begin
-          ComputerMove;  //drop more balls
-          CheckForRows;  //check if one of those balls connected 5 or more
+          ComputerMove;  (*drop more balls*)
+          CheckForRows;  (*check if one of those balls connected 5 or more*)
           DrawCrossHair;
        end;
      end;
@@ -1043,13 +1065,25 @@ begin
 end;
 
 var
-  gd,gm    : smallint;
+{$IFDEF FPC}
+   gd,gm    : smallint;
+{$ELSE}
+   gd,gm    : integer;
+{$ENDIF}
+
          k : integer;
   gameover : boolean;
 begin
  gd:=ega;
  gm:=egahi;
- initgraph(gd,gm,'');
+{$IFDEF FPC}
+    initgraph(gd,gm,'');
+{$ELSE}
+    initgraph(gd,gm,'c:\tp7\bgi');
+{$ENDIF}
+
+
+
 
  Randomize;
  gameover:=false;
@@ -1063,21 +1097,21 @@ begin
     if k=72 then MoveCrossHairUp;
     if k=80 then MoveCrossHairDown;
   end;
-//  if k=ord('[') then CheckForRows;
-//  if k=ord('g')  then DrawGameBoard;
-//  if k=ord('p') then DrawPath;
+(*  if k=ord('[') then CheckForRows;*)
+(*  if k=ord('g')  then DrawGameBoard;*)
+(*  if k=ord('p') then DrawPath;*)
 
-  if (k=ord('r')) or (k=ord('R')) then 
+  if (k=ord('r')) or (k=ord('R')) then
   begin
      gameover:=false;
      StartGame;
   end;
   if (k=ord('l')) or (k=ord('L')) or (k=13) then LockOrMove;
 
-  //check if board is filled up/gave over
+  (*check if board is filled up/gave over*)
   gameover:=isGameOver;
   if gameover then DrawGameOver;
-  //if (k=ord('m')) then MovedItem;
+  (*if (k=ord('m')) then MovedItem;*)
 
   if CheatMode then CheatAction(k);
   if (k=ord('c')) or (k=ord('C')) then
@@ -1087,5 +1121,6 @@ begin
   end;
  Until (k=ord('q')) or (k=ord('Q')) or (k=ord('x')) or (k=ord('X'));
  closegraph;
-end.
 
+
+end.
