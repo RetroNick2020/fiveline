@@ -1,7 +1,7 @@
 # fiveline
 RetroNick's version the classic puzzle/logic game. 
 
-![Try the online version]https://retronick.neocities.org/fiveline/game.html)
+[Try the online version]https://retronick.neocities.org/fiveline/game.html)
 
 Current version is portable and with little modifications can be ported to other platforms. Source code can be compiled for DOS using freepascal GO32 and 8086 compilers without any achanges. The code can also be compiled in turbo pascal without any changes.
 
