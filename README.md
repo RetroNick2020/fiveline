@@ -1,5 +1,9 @@
 # fiveline
-RetroNick's version the classic puzzle/logic game. Current version is portable and with little modifications can be ported to other platforms. Source code can be compiled for DOS using freepascal GO32 and 8086 compilers without any achanges. The code can also be compiled in turbo pascal without any changes.
+RetroNick's version the classic puzzle/logic game. 
+
+![Try the online version]https://retronick.neocities.org/fiveline/game.html)
+
+Current version is portable and with little modifications can be ported to other platforms. Source code can be compiled for DOS using freepascal GO32 and 8086 compilers without any achanges. The code can also be compiled in turbo pascal without any changes.
 
 Windows users just need to replace Crt with WinCrt - change gm,gd to VGA and VGAHI. For some reason EGA modes don't work on Windows. Windows users will also need to adjust constants to make the game board much bigger. I may get to this later on.
 
