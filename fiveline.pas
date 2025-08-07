@@ -1128,7 +1128,7 @@ begin
      Cheatmode:=NOT cheatmode;
      DrawHelp;
   end;
- Until (k=ord('q')) or (k=ord('Q')) or (k=ord('x')) or (k=ord('X'));
+ Until (k=ord('q')) or (k=ord('Q')) or (k=ord('x')) or (k=ord('X')) or (k = 3);
  closegraph;
 
 
