@@ -14,9 +14,18 @@
 
 (* remove or comment next line to compile for Turbo Pascal            *)
 {$DEFINE FPC}
-
+{$DEFINE PTCGRAPH}
 Program FiveLine;
-     uses crt,graph,pathfind,squeue;
+  uses
+    {$IFDEF PTCGRAPH}
+    {$IFDEF unix}
+    cThreads,
+    {$ENDIF}
+    ptccrt,ptcgraph,
+    {$ELSE}
+    crt,graph,
+    {$ENDIF}
+    pathfind,squeue;
 
 Const
   ProgramName ='Fiveline v1.1';
