@@ -14,9 +14,18 @@
 
 (* remove or comment next line to compile for Turbo Pascal            *)
 {$DEFINE FPC}
-
+{$DEFINE PTCGRAPH}
 Program FiveLine;
-     uses crt,graph,pathfind,squeue;
+  uses
+    {$IFDEF PTCGRAPH}
+    {$IFDEF unix}
+    cThreads,
+    {$ENDIF}
+    ptccrt,ptcgraph,
+    {$ELSE}
+    crt,graph,
+    {$ENDIF}
+    pathfind,squeue;
 
 Const
   ProgramName ='Fiveline v1.1';
@@ -1119,7 +1128,7 @@ begin
      Cheatmode:=NOT cheatmode;
      DrawHelp;
   end;
- Until (k=ord('q')) or (k=ord('Q')) or (k=ord('x')) or (k=ord('X'));
+ Until (k=ord('q')) or (k=ord('Q')) or (k=ord('x')) or (k=ord('X')) or (k = 3);
  closegraph;
 
 
